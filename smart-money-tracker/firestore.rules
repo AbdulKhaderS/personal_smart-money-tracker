@@ -1,0 +1,151 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - uid: string (required)
+    //   - email: string (required)
+    //   - displayName: string
+    //   - monthlyIncome: number
+    //   - currency: string
+    //   - budgetSettings: map
+    //   - createdAt: timestamp
+    //
+    // Collection: users/{userId}/expenses
+    // Fields:
+    //   - uid: string (required, owner)
+    //   - name: string (required)
+    //   - amount: number (required)
+    //   - category: string (required)
+    //   - date: timestamp (required)
+    //   - notes: string
+    //
+    // Collection: users/{userId}/income
+    // Fields:
+    //   - uid: string (required, owner)
+    //   - source: string (required)
+    //   - amount: number (required)
+    //   - date: timestamp (required)
+    //
+    // Collection: users/{userId}/remittances
+    // Fields:
+    //   - uid: string (required, owner)
+    //   - amount: number (required)
+    //   - date: timestamp (required)
+    //   - notes: string
+    //
+    // Collection: users/{userId}/categories
+    // Fields:
+    //   - uid: string (required, owner)
+    //   - name: string (required)
+    //   - icon: string
+    //   - color: string
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidString(val, min, max) {
+      return val is string && val.size() >= min && val.size() <= max;
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email']) &&
+             data.uid == request.auth.uid &&
+             isValidEmail(data.email) &&
+             (!('displayName' in data) || isValidString(data.displayName, 0, 100)) &&
+             (!('monthlyIncome' in data) || data.monthlyIncome is number) &&
+             (!('currency' in data) || isValidString(data.currency, 1, 10));
+    }
+
+    function isValidExpense(data) {
+      return data.keys().hasAll(['uid', 'name', 'amount', 'category', 'date']) &&
+             data.uid == request.auth.uid &&
+             isValidString(data.name, 1, 100) &&
+             data.amount is number && data.amount >= 0 &&
+             isValidString(data.category, 1, 50) &&
+             data.date is timestamp;
+    }
+
+    function isValidIncome(data) {
+      return data.keys().hasAll(['uid', 'source', 'amount', 'date']) &&
+             data.uid == request.auth.uid &&
+             isValidString(data.source, 1, 100) &&
+             data.amount is number && data.amount >= 0 &&
+             data.date is timestamp;
+    }
+
+    function isValidRemittance(data) {
+      return data.keys().hasAll(['uid', 'amount', 'date']) &&
+             data.uid == request.auth.uid &&
+             data.amount is number && data.amount >= 0 &&
+             data.date is timestamp;
+    }
+
+    function isValidCategory(data) {
+      return data.keys().hasAll(['uid', 'name']) &&
+             data.uid == request.auth.uid &&
+             isValidString(data.name, 1, 50);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data);
+
+      match /expenses/{expenseId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidExpense(request.resource.data);
+        allow update: if isOwner(userId) && isValidExpense(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      match /income/{incomeId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidIncome(request.resource.data);
+        allow update: if isOwner(userId) && isValidIncome(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      match /remittances/{remittanceId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidRemittance(request.resource.data);
+        allow update: if isOwner(userId) && isValidRemittance(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      match /categories/{categoryId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidCategory(request.resource.data);
+        allow update: if isOwner(userId) && isValidCategory(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}

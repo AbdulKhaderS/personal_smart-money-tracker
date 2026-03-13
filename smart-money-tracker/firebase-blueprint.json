@@ -1,0 +1,94 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Stores user preferences and budget settings.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "monthlyIncome": { "type": "number" },
+        "currency": { "type": "string", "default": "KD" },
+        "budgetSettings": {
+          "type": "object",
+          "description": "Map of category names to budget amounts."
+        },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Expense": {
+      "title": "Expense Entry",
+      "description": "A single expense transaction.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "amount": { "type": "number" },
+        "category": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "notes": { "type": "string" }
+      },
+      "required": ["uid", "name", "amount", "category", "date"]
+    },
+    "Income": {
+      "title": "Income Entry",
+      "description": "A single income transaction.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "source": { "type": "string" },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "source", "amount", "date"]
+    },
+    "Remittance": {
+      "title": "Remittance Entry",
+      "description": "Money sent home transaction.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "format": "date-time" },
+        "notes": { "type": "string" }
+      },
+      "required": ["uid", "amount", "date"]
+    },
+    "Category": {
+      "title": "Expense Category",
+      "description": "Customizable expense category.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "icon": { "type": "string" },
+        "color": { "type": "string" }
+      },
+      "required": ["uid", "name"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile document."
+    },
+    "/users/{userId}/expenses/{expenseId}": {
+      "schema": "Expense",
+      "description": "User's expense records."
+    },
+    "/users/{userId}/income/{incomeId}": {
+      "schema": "Income",
+      "description": "User's income records."
+    },
+    "/users/{userId}/remittances/{remittanceId}": {
+      "schema": "Remittance",
+      "description": "User's remittance records."
+    },
+    "/users/{userId}/categories/{categoryId}": {
+      "schema": "Category",
+      "description": "User's custom categories."
+    }
+  }
+}
