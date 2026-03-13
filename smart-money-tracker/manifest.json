@@ -1,0 +1,13 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Smart Money Tracker",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "MoneyTracker",
+  "start_url": "/",
+  "theme_color": "#ffffff",
+  "id": "https://sunny-lolly-af5e61.netlify.app",
+  "description": "Smart Money Tracker web app built with Google AI Studio and Firebase to log daily expenses, view reports, and export data for personal finance tracking."
+}
